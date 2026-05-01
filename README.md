@@ -59,7 +59,7 @@ I want a valuation-based entry price in euros...
 
 ## 📱 Demo
 
-Live preview on [GitHub Pages](https://yourusername.github.io/stock-prompt-builder/) (deploy after upload)
+Live preview on [GitHub Pages](https://aswhitez.github.io/stock-prompt-builder/)
 
 ## 🔧 Development
 

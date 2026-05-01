@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stock Analysis Prompt Builder</title>
+  <link rel="preconnect" href="https://api.fontshare.com" />
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@500,700&display=swap" rel="stylesheet" />
+  <style>
+    :root, [data-theme="light"] {
+      --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+      --text-sm: clamp(0.875rem, 0.8rem + 0.35vw, 1rem);
+      --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+      --text-lg: clamp(1.125rem, 1rem + 0.75vw, 1.5rem);
+      --text-xl: clamp(1.5rem, 1.2rem + 1.25vw, 2.25rem);
+      --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem; --space-4: 1rem;
+      --space-5: 1.25rem; --space-6: 1.5rem; --space-8: 2rem; --space-10: 2.5rem;
+      --space-12: 3rem; --space-16: 4rem;
+      --color-bg: #f7f6f2; --color-surface: #f9f8f5; --color-surface-2: #fbfbf9;
+      --color-surface-offset: #edeae5; --color-border: #d4d1ca; --color-divider: #dcd9d5;
+      --color-text: #28251d; --color-text-muted: #66635d; --color-text-faint: #96938d;
+      --color-primary: #01696f; --color-primary-hover: #0c4e54; --color-primary-highlight: #d9e8e5;
+      --color-success: #437a22; --color-warning: #964219; --color-error: #a12c7b;
+      --shadow-sm: 0 1px 2px rgba(40,37,29,.06); --shadow-md: 0 10px 30px rgba(40,37,29,.08);
+      --radius-sm: .375rem; --radius-md: .5rem; --radius-lg: .875rem; --radius-xl: 1.25rem; --radius-full: 9999px;
+      --font-body: 'Satoshi', Inter, sans-serif; --font-display: 'Cabinet Grotesk', 'Satoshi', sans-serif;
+      --transition-interactive: 180ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    [data-theme="dark"] {
+      --color-bg: #171614; --color-surface: #1c1b19; --color-surface-2: #201f1d; --color-surface-offset: #2a2825;
+      --color-border: #393836; --color-divider: #262523; --color-text: #e4e1da; --color-text-muted: #aaa69f; --color-text-faint: #7c7974;
+      --color-primary: #4f98a3; --color-primary-hover: #62b0bd; --color-primary-highlight: #243438;
+      --color-success: #7db55c; --color-warning: #d18a57; --color-error: #d163a7;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,.25); --shadow-md: 0 10px 30px rgba(0,0,0,.35);
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0; min-height: 100dvh; font-family: var(--font-body); font-size: var(--text-base); line-height: 1.6;
+      color: var(--color-text); background:
+        radial-gradient(circle at top right, color-mix(in srgb, var(--color-primary) 12%, transparent), transparent 30%),
+        var(--color-bg);
+    }
+    h1,h2,h3,p { margin: 0; }
+    button,input,select,textarea { font: inherit; }
+    button { cursor: pointer; }
+    a,button,input,select,textarea { transition: all var(--transition-interactive); }
+    :focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; }
+    .app-shell {
+      width: min(1200px, calc(100% - 2rem)); margin: 0 auto; padding: var(--space-6) 0 var(--space-12);
+    }
+    .skip-link {
+      position: absolute; left: -999px; top: var(--space-2); background: var(--color-primary); color: #fff; padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-md); z-index: 10;
+    }
+    .skip-link:focus { left: var(--space-3); }
+    .topbar {
+      display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); margin-bottom: var(--space-8);
+      padding: var(--space-4) var(--space-5); background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+      border: 1px solid color-mix(in srgb, var(--color-text) 10%, transparent); border-radius: var(--radius-xl); box-shadow: var(--shadow-sm);
+      backdrop-filter: blur(10px); position: sticky; top: 1rem; z-index: 5;
+    }
+    .brand { display: flex; align-items: center; gap: var(--space-3); }
+    .brand-mark {
+      width: 42px; height: 42px; border-radius: 14px; background: linear-gradient(135deg, var(--color-primary), color-mix(in srgb, var(--color-primary) 65%, white));
+      display: grid; place-items: center; color: white; box-shadow: var(--shadow-sm); flex-shrink: 0;
+    }
+    .brand-mark svg { width: 24px; height: 24px; }
+    .brand-copy small { display: block; color: var(--color-text-muted); font-size: var(--text-xs); letter-spacing: .08em; text-transform: uppercase; }
+    .brand-copy strong { display: block; font-family: var(--font-display); font-size: var(--text-lg); }
+    .topbar-actions { display: flex; gap: var(--space-3); align-items: center; }
+    .icon-button, .btn {
+      border: 1px solid color-mix(in srgb, var(--color-text) 10%, transparent); background: var(--color-surface); color: var(--color-text);
+      border-radius: var(--radius-full); min-height: 44px; padding: 0 var(--space-4); display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
+    }
+    .icon-button { width: 44px; padding: 0; }
+    .btn-primary { background: var(--color-primary); color: white; border-color: transparent; }
+    .btn-primary:hover { background: var(--color-primary-hover); }
+    .hero {
+      display: grid; grid-template-columns: 1.15fr .85fr; gap: var(--space-6); align-items: stretch; margin-bottom: var(--space-8);
+    }
+    .hero-card, .panel {
+      background: color-mix(in srgb, var(--color-surface) 95%, transparent); border: 1px solid color-mix(in srgb, var(--color-text) 10%, transparent);
+      border-radius: var(--radius-xl); box-shadow: var(--shadow-md);
+    }
+    .hero-card { padding: clamp(1.5rem, 3vw, 3rem); }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: var(--space-2); padding: .45rem .8rem; border-radius: var(--radius-full);
+      background: var(--color-primary-highlight); color: var(--color-primary); font-size: var(--text-xs); font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+      margin-bottom: var(--space-4);
+    }
+    .hero h1 { font-family: var(--font-display); font-size: var(--text-xl); line-height: 1.05; max-width: 13ch; margin-bottom: var(--space-4); }
+    .hero p { color: var(--color-text-muted); max-width: 58ch; }
+    .hero-grid {
+      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); margin-top: var(--space-6);
+    }
+    .metric {
+      padding: var(--space-4); border-radius: var(--radius-lg); background: var(--color-surface-2); border: 1px solid color-mix(in srgb, var(--color-text) 8%, transparent);
+    }
+    .metric strong { display: block; font-family: var(--font-display); font-size: var(--text-lg); }
+    .metric span { color: var(--color-text-muted); font-size: var(--text-sm); }
+    .layout { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(320px, .95fr); gap: var(--space-6); }
+    .panel { padding: var(--space-5); }
+    .panel-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-3); margin-bottom: var(--space-5); }
+    .panel-heading h2 { font-family: var(--font-display); font-size: var(--text-lg); }
+    .panel-heading p { color: var(--color-text-muted); font-size: var(--text-sm); max-width: 48ch; }
+    .template-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); margin-bottom: var(--space-5); }
+    .template-option input { position: absolute; opacity: 0; pointer-events: none; }
+    .template-card {
+      display: block; padding: var(--space-4); border-radius: var(--radius-lg); background: var(--color-surface-2); border: 1px solid color-mix(in srgb, var(--color-text) 8%, transparent);
+      min-height: 100%;
+    }
+    .template-card strong { display: block; margin-bottom: .35rem; }
+    .template-card span { color: var(--color-text-muted); font-size: var(--text-sm); }
+    .template-option input:checked + .template-card {
+      border-color: var(--color-primary); background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface-2));
+      box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-primary) 45%, transparent);
+    }
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+    .field, .field-full { display: flex; flex-direction: column; gap: var(--space-2); }
+    .field-full { grid-column: 1 / -1; }
+    label { font-size: var(--text-sm); font-weight: 700; }
+    .hint { font-size: var(--text-xs); color: var(--color-text-muted); }
+    input, select, textarea {
+      width: 100%; min-height: 48px; padding: .85rem 1rem; border-radius: var(--radius-md);
+      border: 1px solid color-mix(in srgb, var(--color-text) 12%, transparent); background: var(--color-surface-2); color: var(--color-text);
+    }
+    textarea { min-height: 120px; resize: vertical; }
+    .actions { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-5); }
+    .preview-box {
+      padding: var(--space-5); border-radius: var(--radius-lg); background: var(--color-surface-2); border: 1px solid color-mix(in srgb, var(--color-text) 8%, transparent);
+      min-height: 320px; white-space: pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: .95rem;
+    }
+    .summary-stack { display: grid; gap: var(--space-3); margin-bottom: var(--space-5); }
+    .summary-card {
+      padding: var(--space-4); border-radius: var(--radius-lg); background: var(--color-surface-2); border: 1px solid color-mix(in srgb, var(--color-text) 8%, transparent);
+    }
+    .summary-card span { display: block; color: var(--color-text-muted); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: .06em; }
+    .summary-card strong { display: block; margin-top: .25rem; font-size: var(--text-lg); }
+    .summary-card p { margin-top: .25rem; color: var(--color-text-muted); font-size: var(--text-sm); }
+    .status-pill {
+      display: inline-flex; align-items: center; gap: .45rem; padding: .45rem .75rem; border-radius: var(--radius-full); font-size: var(--text-xs); font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+      background: var(--color-primary-highlight); color: var(--color-primary);
+    }
+    .footer-note { margin-top: var(--space-4); color: var(--color-text-muted); font-size: var(--text-sm); }
+    @media (max-width: 980px) {
+      .hero, .layout { grid-template-columns: 1fr; }
+      .template-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .app-shell { width: min(100% - 1rem, 1200px); }
+      .topbar { padding: var(--space-4); align-items: flex-start; flex-direction: column; }
+      .topbar-actions, .actions, .form-grid { width: 100%; }
+      .form-grid { grid-template-columns: 1fr; }
+      .hero-grid { grid-template-columns: 1fr; }
+      .btn, .icon-button { width: 100%; justify-content: center; }
+      .icon-button { max-width: 56px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand" aria-label="Stock Analysis Prompt Builder brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 16 10 11 13 14 19 8" />
+            <path d="M17 8h2v2" />
+            <path d="M4 19h16" opacity=".55" />
+          </svg>
+        </div>
+        <div class="brand-copy">
+          <small>v1.0</small>
+          <strong>Stock Analysis Prompt Builder</strong>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-button" type="button" data-theme-toggle aria-label="Switch to dark mode">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        </button>
+        <button class="btn" type="button" id="resetTop">Reset</button>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero" aria-label="App introduction">
+        <article class="hero-card">
+          <div class="hero-eyebrow">Valuation-first workflow</div>
+          <h1>Generate clean stock valuation prompts in seconds.</h1>
+          <p>This app turns the three starter-pack templates into a practical workflow: choose a prompt angle, fill company and portfolio context, then copy a ready-to-use prompt for Perplexity or another analysis assistant.</p>
+          <div class="hero-grid">
+            <div class="metric"><strong>3</strong><span>Prompt templates from the source pack</span></div>
+            <div class="metric"><strong>1</strong><span>Copy-ready output area with live preview</span></div>
+            <div class="metric"><strong>EUR</strong><span>Cost basis and valuation framing preserved</span></div>
+            <div class="metric"><strong>v1</strong><span>No live market API, ready for future expansion</span></div>
+          </div>
+        </article>
+        <aside class="panel">
+          <div class="panel-heading">
+            <div>
+              <h2>Included by default</h2>
+              <p>The build follows the agreed default path: template selector, structured form, prompt preview, copy button, reset button, and light/dark mode.</p>
+            </div>
+          </div>
+          <div class="summary-stack">
+            <div class="summary-card"><span>Workflow</span><strong>Select, fill, copy</strong><p>Keep the process fast and focused on valuation-oriented prompting.</p></div>
+            <div class="summary-card"><span>Output</span><strong>Prompt text</strong><p>Use the generated text directly in a Perplexity Space or another research workflow.</p></div>
+            <div class="summary-card"><span>State</span><strong>Session only</strong><p>No browser storage is used, which keeps the app sandbox-safe.</p></div>
+          </div>
+          <div class="status-pill" id="copyStatus">Ready</div>
+          <p class="footer-note">Optional notes and current price fields are included to make the prompt more usable without changing the original valuation-first intent.</p>
+        </aside>
+      </section>
+
+      <section class="layout" aria-label="Prompt builder workspace">
+        <section class="panel">
+          <div class="panel-heading">
+            <div>
+              <h2>Prompt setup</h2>
+              <p>Choose the analysis angle, then enter the company and portfolio details that the source markdown expects.</p>
+            </div>
+          </div>
+
+          <fieldset class="template-grid" aria-label="Template selector">
+            <legend class="sr-only" style="position:absolute;left:-9999px;">Choose a template</legend>
+            <label class="template-option">
+              <input type="radio" name="template" value="template1" checked />
+              <span class="template-card"><strong>Template 1</strong><span>First analysis, broad valuation overview.</span></span>
+            </label>
+            <label class="template-option">
+              <input type="radio" name="template" value="template2" />
+              <span class="template-card"><strong>Template 2</strong><span>Buy-now decision with explicit valuation metrics.</span></span>
+            </label>
+            <label class="template-option">
+              <input type="radio" name="template" value="template3" />
+              <span class="template-card"><strong>Template 3</strong><span>Target entry price range with valuation cases.</span></span>
+            </label>
+          </fieldset>
+
+          <form id="promptForm" class="form-grid">
+            <div class="field">
+              <label for="companyName">Company name</label>
+              <input id="companyName" name="companyName" type="text" placeholder="e.g. LVMH" />
+            </div>
+            <div class="field">
+              <label for="ticker">Ticker</label>
+              <input id="ticker" name="ticker" type="text" placeholder="e.g. MC" />
+            </div>
+            <div class="field">
+              <label for="positionSize">Position size</label>
+              <input id="positionSize" name="positionSize" type="number" min="0" step="1" placeholder="e.g. 25" />
+            </div>
+            <div class="field">
+              <label for="costBasis">Average cost basis (EUR)</label>
+              <input id="costBasis" name="costBasis" type="number" min="0" step="0.01" placeholder="e.g. 702.50" />
+            </div>
+            <div class="field">
+              <label for="currentPrice">Current share price (optional, EUR)</label>
+              <input id="currentPrice" name="currentPrice" type="number" min="0" step="0.01" placeholder="e.g. 745.20" />
+            </div>
+            <div class="field">
+              <label for="exchange">Exchange label</label>
+              <select id="exchange" name="exchange">
+                <option value="Stock Analysis Paris">Stock Analysis Paris</option>
+                <option value="FRANKFURT STOCK EXCHANGE">FRANKFURT STOCK EXCHANGE</option>
+              </select>
+            </div>
+            <div class="field-full">
+              <label for="notes">Optional notes</label>
+              <textarea id="notes" name="notes" placeholder="Examples: peer group to compare, preferred margin of safety, valuation concerns, or a sector note."></textarea>
+              <div class="hint">Optional notes are appended as extra analysis context without altering the original template structure.</div>
+            </div>
+          </form>
+
+          <div class="actions">
+            <button class="btn btn-primary" type="button" id="copyPrompt">Copy prompt</button>
+            <button class="btn" type="button" id="downloadPrompt">Download .txt</button>
+            <button class="btn" type="button" id="resetForm">Reset form</button>
+          </div>
+        </section>
+
+        <aside class="panel">
+          <div class="panel-heading">
+            <div>
+              <h2>Generated prompt</h2>
+              <p>The preview updates as you type. It preserves the source wording and inserts your values into the selected template.</p>
+            </div>
+          </div>
+          <div class="summary-stack" aria-label="Prompt summary">
+            <div class="summary-card"><span>Selected template</span><strong id="summaryTemplate">Template 1 — First analysis</strong></div>
+            <div class="summary-card"><span>Company and ticker</span><strong id="summaryCompany">Not filled yet</strong></div>
+            <div class="summary-card"><span>Portfolio context</span><strong id="summaryPortfolio">Position and cost basis pending</strong><p id="priceComparison">Add an optional current price to see a quick comparison.</p></div>
+          </div>
+          <div class="preview-box" id="promptPreview" aria-live="polite"></div>
+        </aside>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const templates = {
+      template1: ({ companyName, ticker, positionSize, costBasis, exchange, optionalPriceLine, notesBlock }) => `Analyse ${companyName} (${ticker}) listed on ${exchange}.\n\nI want a valuation-based entry price in euros, not a brand-based opinion.\nCompare current valuation metrics with historical averages and relevant peers where available.\nStart with an executive summary and key figures.\n\nPortfolio context:\n- Position size: ${positionSize} shares\n- Average cost basis: EUR ${costBasis} per share\n- Please compare the current share price with my cost basis.\n- Explain whether the stock appears attractive to add to, fairly valued to hold, or too expensive to average up based on valuation.${optionalPriceLine}\n\nImportant:\n- Use my cost basis only as portfolio context, not as the definition of fair value.\n- Determine fair value from business fundamentals, historical valuation, peer comparison, and margin of safety.${notesBlock}`,
+      template2: ({ companyName, ticker, positionSize, costBasis, exchange, optionalPriceLine, notesBlock }) => `Analyse whether ${companyName} (${ticker}) is worth buying now on ${exchange}.\n\nI want a valuation-based entry price in euros, not a brand-based opinion.\nDefine the specific valuation metrics that justify a buy price in EUR, including:\n- P/E versus historical average\n- EV/EBIT or EV/EBITDA versus history\n- Free-cash-flow yield\n- Dividend yield\n- Peer comparison where relevant\n\nStart with an executive summary and key figures.\n\nPortfolio context:\n- Position size: ${positionSize} shares\n- Average cost basis: EUR ${costBasis} per share\n- Please compare the current share price with my cost basis.\n- Explain whether the stock appears attractive to add to, fairly valued to hold, or too expensive to average up based on valuation.${optionalPriceLine}\n\nImportant:\n- Use my cost basis only as portfolio context, not as the definition of fair value.\n- Determine fair value from business fundamentals, historical valuation, peer comparison, and margin of safety.\n- State clearly whether the stock is attractive to buy now, only attractive below a lower price, or too expensive at current levels.\n\nAlso state clearly:\n1. Whether the stock is below or above my cost basis\n2. Whether I should hold, add, or wait\n3. The price below which adding would become attractive${notesBlock}`,
+      template3: ({ companyName, ticker, positionSize, costBasis, exchange, optionalPriceLine, notesBlock }) => `Analyse ${companyName} (${ticker}) on ${exchange} and determine the attractive entry price range in EUR.\n\nI do not want a brand-based view.\nI want a clear valuation-based framework using:\n- Historical multiples\n- Peer comparison\n- Downside assumptions\n- Margin of safety\n- A final verdict stating the price below which the stock becomes attractive\n\nStart with an executive summary and key figures.\n\nPortfolio context:\n- Position size: ${positionSize} shares\n- Average cost basis: EUR ${costBasis} per share\n- Please compare the current share price with my cost basis.\n- Explain whether the stock appears attractive to add to, fairly valued to hold, or too expensive to average up based on valuation.${optionalPriceLine}\n\nImportant:\n- Use my cost basis only as portfolio context, not as the definition of fair value.\n- Determine fair value from business fundamentals, historical valuation, peer comparison, and margin of safety.\n- Provide a conservative case, a base case, and an optimistic case if possible.\n\nAlso state clearly:\n1. Whether the stock is below or above my cost basis\n2. Whether I should hold, add, or wait\n3. The EUR price below which adding would become attractive${notesBlock}`
+    };
+
+    const templateLabels = {
+      template1: 'Template 1 — First analysis',
+      template2: 'Template 2 — Buy-now decision',
+      template3: 'Template 3 — Target entry price'
+    };
+
+    const form = document.getElementById('promptForm');
+    const preview = document.getElementById('promptPreview');
+    const copyStatus = document.getElementById('copyStatus');
+    const summaryTemplate = document.getElementById('summaryTemplate');
+    const summaryCompany = document.getElementById('summaryCompany');
+    const summaryPortfolio = document.getElementById('summaryPortfolio');
+    const priceComparison = document.getElementById('priceComparison');
+    const templateInputs = document.querySelectorAll('input[name="template"]');
+    const copyPromptButton = document.getElementById('copyPrompt');
+    const downloadPromptButton = document.getElementById('downloadPrompt');
+    const resetButtons = [document.getElementById('resetForm'), document.getElementById('resetTop')];
+    const themeToggle = document.querySelector('[data-theme-toggle]');
+    const root = document.documentElement;
+
+    function getSelectedTemplate() {
+      return document.querySelector('input[name="template"]:checked').value;
+    }
+
+    function formatNumber(value, digits = 2) {
+      const num = Number(value);
+      if (Number.isNaN(num)) return '—';
+      return new Intl.NumberFormat('en-IE', { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(num);
+    }
+
+    function buildPrompt() {
+      const data = new FormData(form);
+      const companyName = (data.get('companyName') || '').toString().trim() || '[COMPANY NAME]';
+      const ticker = (data.get('ticker') || '').toString().trim().toUpperCase() || '[TICKER]';
+      const positionSize = (data.get('positionSize') || '').toString().trim() || '[NUMBER]';
+      const costBasisRaw = (data.get('costBasis') || '').toString().trim();
+      const costBasis = costBasisRaw ? formatNumber(costBasisRaw) : '[PRICE]';
+      const currentPriceRaw = (data.get('currentPrice') || '').toString().trim();
+      const exchange = (data.get('exchange') || 'Stock Analysis').toString();
+      const notes = (data.get('notes') || '').toString().trim();
+      const optionalPriceLine = currentPriceRaw ? `\n- Current share price reference: EUR ${formatNumber(currentPriceRaw)} per share.` : '';
+      const notesBlock = notes ? `\n\nAdditional context:\n- ${notes.replace(/\n+/g, '\n- ')}` : '';
+      const selectedTemplate = getSelectedTemplate();
+      const prompt = templates[selectedTemplate]({ companyName, ticker, positionSize, costBasis, exchange, optionalPriceLine, notesBlock });
+
+      summaryTemplate.textContent = templateLabels[selectedTemplate];
+      summaryCompany.textContent = companyName.includes('[') ? 'Not filled yet' : `${companyName} (${ticker})`;
+      summaryPortfolio.textContent = positionSize === '[NUMBER]' || costBasis === '[PRICE]'
+        ? 'Position and cost basis pending'
+        : `${positionSize} shares at EUR ${costBasis}`;
+
+      if (currentPriceRaw && costBasisRaw) {
+        const current = Number(currentPriceRaw);
+        const basis = Number(costBasisRaw);
+        const diff = current - basis;
+        const pct = basis !== 0 ? (diff / basis) * 100 : 0;
+        const direction = diff > 0 ? 'above' : diff < 0 ? 'below' : 'equal to';
+        priceComparison.textContent = `Current price is ${direction} cost basis by EUR ${formatNumber(Math.abs(diff))} (${Math.abs(pct).toFixed(2)}%).`;
+      } else {
+        priceComparison.textContent = 'Add an optional current price to see a quick comparison.';
+      }
+
+      preview.textContent = prompt;
+      return prompt;
+    }
+
+    async function copyPrompt() {
+      const prompt = buildPrompt();
+      try {
+        await navigator.clipboard.writeText(prompt);
+        copyStatus.textContent = 'Copied';
+      } catch (error) {
+        copyStatus.textContent = 'Copy failed';
+      }
+    }
+
+    function downloadPrompt() {
+      const prompt = buildPrompt();
+      const company = (new FormData(form).get('companyName') || 'euronext-stock').toString().trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      const blob = new Blob([prompt], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${company || 'euronext-stock'}-prompt.txt`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      copyStatus.textContent = 'Downloaded';
+    }
+
+    function resetForm() {
+      form.reset();
+      document.querySelector('input[value="template1"]').checked = true;
+      copyStatus.textContent = 'Ready';
+      buildPrompt();
+    }
+
+    function syncThemeIcon(theme) {
+      themeToggle.setAttribute('aria-label', `Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`);
+      themeToggle.innerHTML = theme === 'dark'
+        ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path></svg>'
+        : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>';
+    }
+
+    (function initTheme() {
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      root.setAttribute('data-theme', systemTheme);
+      syncThemeIcon(systemTheme);
+    })();
+
+    form.addEventListener('input', () => {
+      buildPrompt();
+      copyStatus.textContent = 'Ready';
+    });
+    templateInputs.forEach(input => input.addEventListener('change', () => {
+      buildPrompt();
+      copyStatus.textContent = 'Ready';
+    }));
+    copyPromptButton.addEventListener('click', copyPrompt);
+    downloadPromptButton.addEventListener('click', downloadPrompt);
+    resetButtons.forEach(button => button.addEventListener('click', resetForm));
+    themeToggle.addEventListener('click', () => {
+      const nextTheme = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', nextTheme);
+      syncThemeIcon(nextTheme);
+    });
+
+    buildPrompt();
+  </script>
+</body>
+</html>
